@@ -34,7 +34,8 @@ export async function POST(req: NextRequest) {
     });
     setAuthCookie(res, token);
     return res;
-  } catch {
+  } catch (err) {
+    console.error("[register]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
