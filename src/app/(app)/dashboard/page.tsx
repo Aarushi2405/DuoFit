@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { verifyJwt } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import DashboardPage from "@/components/dashboard/DashboardPage";
-import { getWeekStart, getDayStart, getDayEnd, getTodayAbbrev, isItemForToday } from "@/lib/dates";
+import { getWeekStart, getDayStart, getDayEnd } from "@/lib/dates";
 import { redirect } from "next/navigation";
 
 async function getStreak(userId: string): Promise<number> {
@@ -57,8 +57,6 @@ export default async function Dashboard() {
   });
   if (!user) redirect("/login");
 
-  const todayAbbrev = getTodayAbbrev(today);
-
   const [allMyChecklist, myMeals, myStreak, mySchedule] = await Promise.all([
     prisma.checklistItem.findMany({ where: { userId: user.id, weekStart } }),
     prisma.mealLog.findMany({ where: { userId: user.id, logDate: { gte: dayStart, lte: dayEnd } } }),
@@ -66,7 +64,7 @@ export default async function Dashboard() {
     prisma.fitnessSchedule.findUnique({ where: { userId: user.id } }),
   ]);
 
-  const myChecklist = allMyChecklist.filter((i) => isItemForToday(i.label, todayAbbrev, i.logDate));
+  const myChecklist = allMyChecklist;
 
   let partnerData = null;
   if (user.partnerId) {
@@ -81,7 +79,7 @@ export default async function Dashboard() {
     ]);
     partnerData = {
       name: partner?.name ?? "Partner",
-      checklist: allPartnerChecklist.filter((i) => isItemForToday(i.label, todayAbbrev, i.logDate)),
+      checklist: allPartnerChecklist,
       meals: partnerMeals,
       streak: partnerStreak,
     };
