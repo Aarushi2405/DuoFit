@@ -10,24 +10,19 @@ async function getStreak(userId: string): Promise<number> {
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setUTCDate(today.getUTCDate() - 30);
 
-  // Fetch done items: prefer logDate, fall back to completedAt for older items
   const doneItems = await prisma.checklistItem.findMany({
     where: {
       userId,
       done: true,
-      OR: [
-        { logDate: { gte: getDayStart(thirtyDaysAgo) } },
-        { logDate: null, completedAt: { gte: getDayStart(thirtyDaysAgo) } },
-      ],
+      logDate: { gte: getDayStart(thirtyDaysAgo) },
     },
-    select: { logDate: true, completedAt: true },
+    select: { logDate: true },
   });
 
-  // Use logDate if set, otherwise fall back to completedAt
   const doneDays = new Set(
     doneItems
-      .map((i) => (i.logDate ?? i.completedAt)?.toISOString().split("T")[0])
-      .filter((d): d is string => !!d)
+      .filter((i) => i.logDate !== null)
+      .map((i) => i.logDate!.toISOString().split("T")[0])
   );
 
   let streak = 0;
@@ -38,7 +33,7 @@ async function getStreak(userId: string): Promise<number> {
     if (doneDays.has(key)) {
       streak++;
     } else if (i > 0) {
-      break; // only break on past days; today might not be done yet
+      break;
     }
   }
   return streak;
