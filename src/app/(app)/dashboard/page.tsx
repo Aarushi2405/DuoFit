@@ -6,19 +6,37 @@ import { getWeekStart, getDayStart, getDayEnd, getTodayAbbrev, isItemForToday } 
 import { redirect } from "next/navigation";
 
 async function getStreak(userId: string): Promise<number> {
-  let streak = 0;
   const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setUTCDate(today.getUTCDate() - 30);
+
+  // Single query: all done items with a logDate in the last 30 days
+  const doneItems = await prisma.checklistItem.findMany({
+    where: {
+      userId,
+      done: true,
+      logDate: { gte: getDayStart(thirtyDaysAgo) },
+    },
+    select: { logDate: true },
+  });
+
+  // Build a set of ISO date strings where at least one task was completed
+  const doneDays = new Set(
+    doneItems
+      .filter((i) => i.logDate !== null)
+      .map((i) => i.logDate!.toISOString().split("T")[0])
+  );
+
+  let streak = 0;
   for (let i = 0; i < 30; i++) {
     const d = new Date(today);
     d.setUTCDate(today.getUTCDate() - i);
-    const start = getDayStart(d);
-    const end = getDayEnd(d);
-    const count = await prisma.checklistItem.count({
-      where: { userId, done: true, completedAt: { gte: start, lte: end } },
-    });
-    if (count > 0) streak++;
-    else if (i > 0) break;
-    // if i === 0 (today) and count === 0, the day isn't over — don't break
+    const key = d.toISOString().split("T")[0];
+    if (doneDays.has(key)) {
+      streak++;
+    } else if (i > 0) {
+      break; // only break on past days; today might not be done yet
+    }
   }
   return streak;
 }

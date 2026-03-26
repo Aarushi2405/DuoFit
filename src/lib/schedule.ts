@@ -2,25 +2,31 @@ import { FitnessScheduleDTO } from "@/types";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export function generateLabelsForWeek(schedule: FitnessScheduleDTO): string[] {
-  const labels: string[] = [];
+/** Returns items paired with their day offset from weekStart (0=Mon … 6=Sun) */
+export function generateItemsForWeek(schedule: FitnessScheduleDTO): { label: string; dayOffset: number }[] {
+  const items: { label: string; dayOffset: number }[] = [];
 
   for (let i = 0; i < 7; i++) {
     const dayNum = i + 1; // 1=Mon … 7=Sun
     const dayLabel = DAY_NAMES[i];
 
     if (schedule.workoutDays.includes(dayNum)) {
-      labels.push(`${dayLabel} – Workout 💪`);
+      items.push({ label: `${dayLabel} – Workout 💪`, dayOffset: i });
     }
     if (schedule.runDays.includes(dayNum)) {
-      labels.push(`${dayLabel} – Run 🏃`);
+      items.push({ label: `${dayLabel} – Run 🏃`, dayOffset: i });
     }
     if (schedule.dailySteps) {
-      labels.push(`${dayLabel} – ${schedule.dailySteps.toLocaleString()} steps 👟`);
+      items.push({ label: `${dayLabel} – ${schedule.dailySteps.toLocaleString()} steps 👟`, dayOffset: i });
     }
   }
 
-  return labels;
+  return items;
+}
+
+/** @deprecated use generateItemsForWeek */
+export function generateLabelsForWeek(schedule: FitnessScheduleDTO): string[] {
+  return generateItemsForWeek(schedule).map((i) => i.label);
 }
 
 export function parseDays(str: string): number[] {

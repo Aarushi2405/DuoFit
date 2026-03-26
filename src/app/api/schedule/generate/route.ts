@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { generateLabelsForWeek, parseDays } from "@/lib/schedule";
+import { generateItemsForWeek, parseDays } from "@/lib/schedule";
 import { getWeekStart } from "@/lib/dates";
 
 export async function POST(req: NextRequest) {
@@ -16,15 +16,19 @@ export async function POST(req: NextRequest) {
   });
   if (!schedule) return NextResponse.json({ error: "No schedule set" }, { status: 400 });
 
-  const labels = generateLabelsForWeek({
+  const generatedItems = generateItemsForWeek({
     workoutDays: parseDays(schedule.workoutDays),
     runDays: parseDays(schedule.runDays),
     dailySteps: schedule.dailySteps,
   });
 
-  if (labels.length > 0) {
+  if (generatedItems.length > 0) {
     await prisma.checklistItem.createMany({
-      data: labels.map((label) => ({ userId: session.sub, label, weekStart })),
+      data: generatedItems.map(({ label, dayOffset }) => {
+        const logDate = new Date(weekStart);
+        logDate.setUTCDate(weekStart.getUTCDate() + dayOffset);
+        return { userId: session.sub, label, weekStart, logDate };
+      }),
     });
   }
 

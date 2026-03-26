@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { verifyJwt } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getWeekStart } from "@/lib/dates";
-import { generateLabelsForWeek, parseDays } from "@/lib/schedule";
+import { generateItemsForWeek, parseDays } from "@/lib/schedule";
 import ChecklistPage from "@/components/checklist/ChecklistPage";
 import { redirect } from "next/navigation";
 
@@ -38,15 +38,19 @@ export default async function Checklist() {
   // Auto-generate items from schedule if this week is empty
   let mine = existingMine;
   if (existingMine.length === 0 && schedule) {
-    const labels = generateLabelsForWeek({
+    const generatedItems = generateItemsForWeek({
       workoutDays: parseDays(schedule.workoutDays),
       runDays: parseDays(schedule.runDays),
       dailySteps: schedule.dailySteps,
     });
 
-    if (labels.length > 0) {
+    if (generatedItems.length > 0) {
       await prisma.checklistItem.createMany({
-        data: labels.map((label) => ({ userId: user.id, label, weekStart })),
+        data: generatedItems.map(({ label, dayOffset }) => {
+          const logDate = new Date(weekStart);
+          logDate.setUTCDate(weekStart.getUTCDate() + dayOffset);
+          return { userId: user.id, label, weekStart, logDate };
+        }),
       });
       mine = await prisma.checklistItem.findMany({
         where: { userId: user.id, weekStart },

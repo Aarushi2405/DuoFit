@@ -36,13 +36,14 @@ export async function POST(req: NextRequest) {
   const session = await getSession(req);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { label, weekStart: weekParam } = await req.json();
+  const { label, weekStart: weekParam, logDate: logDateParam } = await req.json();
   if (!label?.trim()) return NextResponse.json({ error: "Label is required" }, { status: 400 });
 
   const weekStart = weekParam ? new Date(weekParam) : getWeekStart();
+  const logDate = logDateParam ? new Date(logDateParam + "T00:00:00.000Z") : new Date(new Date().setUTCHours(0, 0, 0, 0));
 
   const item = await prisma.checklistItem.create({
-    data: { userId: session.sub, label: label.trim(), weekStart },
+    data: { userId: session.sub, label: label.trim(), weekStart, logDate },
   });
 
   return NextResponse.json(item, { status: 201 });
