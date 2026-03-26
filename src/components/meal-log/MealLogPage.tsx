@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { MealLogDTO } from "@/types";
 import { MealLog } from "@/generated/prisma/client";
 import MealColumn from "@/components/meal-log/MealColumn";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Props {
   initialMine: MealLog[];
@@ -78,46 +79,53 @@ export default function MealLogPage({ initialMine, initialPartner, partnerName, 
   const isToday = date === today;
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-8 pb-4">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Meal Log</h1>
+    <div className="min-h-screen pb-20">
+      <div className="max-w-lg mx-auto px-4 pt-6">
+        <h1 className="text-2xl font-bold text-foreground mb-4">Meals</h1>
 
-      <div className="flex items-center justify-between mb-5">
-        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 p-1">
-          ← Prev
-        </button>
-        <span className="text-sm font-medium text-gray-600">{formatDateLabel(date)}</span>
-        <button
-          onClick={() => navigate(1)}
-          disabled={isToday}
-          className="text-gray-400 hover:text-gray-600 p-1 disabled:opacity-30"
-        >
-          Next →
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-10 text-gray-400">Loading…</div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <MealColumn
-            title="You"
-            meals={mine}
-            readOnly={false}
-            accent="indigo"
-            date={date}
-            onAdd={handleAdd}
-            onDelete={handleDelete}
-            onUpdate={handleUpdate}
-          />
-          <MealColumn
-            title={partnerName ?? "Partner"}
-            meals={partner}
-            readOnly
-            accent="amber"
-            date={date}
-          />
+        <div className="flex items-center justify-between mb-4 bg-muted/50 rounded-xl p-1">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-background"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-medium text-foreground">{formatDateLabel(date)}</span>
+          <button
+            onClick={() => navigate(1)}
+            disabled={isToday}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-background disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
-      )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-2 border-brand-500 border-t-transparent rounded-full" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <MealColumn
+              title="You"
+              meals={mine}
+              readOnly={false}
+              accent="brand"
+              date={date}
+              onAdd={handleAdd}
+              onDelete={handleDelete}
+              onUpdate={handleUpdate}
+            />
+            <MealColumn
+              title={partnerName ?? "Partner"}
+              meals={partner}
+              readOnly
+              accent="partner"
+              date={date}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

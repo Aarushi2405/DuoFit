@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 export default function PairPartnerModal({ onClose }: { onClose: () => void }) {
   const [code, setCode] = useState("");

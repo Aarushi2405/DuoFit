@@ -1,5 +1,6 @@
-import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaClient } from "@/generated/prisma";
+import { createClient } from "@libsql/client";
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
 import path from "path";
 
 function createPrismaClient() {
@@ -9,7 +10,8 @@ function createPrismaClient() {
   const url = tursoUrl ?? `file:${path.resolve(process.cwd(), "prisma/dev.db")}`;
   const authToken = tursoToken ?? undefined;
 
-  const adapter = new PrismaLibSql({ url, authToken });
+  const client = createClient({ url, authToken });
+  const adapter = new PrismaLibSQL(client);
   return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
 }
 

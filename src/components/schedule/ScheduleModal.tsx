@@ -3,7 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import DayPicker from "@/components/schedule/DayPicker";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   onClose: () => void;

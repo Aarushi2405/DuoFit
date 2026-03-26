@@ -6,6 +6,8 @@ import { getWeekStart } from "@/lib/dates";
 import ChecklistColumn from "@/components/checklist/ChecklistColumn";
 import ScheduleModal from "@/components/schedule/ScheduleModal";
 import { ChecklistItem } from "@/generated/prisma/client";
+import { Button } from "@/components/ui/Button";
+import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
 
 interface Props {
   initialMine: ChecklistItem[];
@@ -103,69 +105,77 @@ export default function ChecklistPage({ initialMine, initialPartner, partnerName
   const showRegenerate = hasSchedule && mine.length === 0 && !loading;
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-8 pb-4">
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-2xl font-bold text-gray-900">Weekly Checklist</h1>
-        <button
-          onClick={() => setShowScheduleModal(true)}
-          className="text-xs text-indigo-500 hover:text-indigo-700 font-medium px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
-        >
-          {hasSchedule ? "✏️ Schedule" : "＋ Schedule"}
-        </button>
-      </div>
-
-      {/* Week navigation */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 p-1">
-          ← Prev
-        </button>
-        <span className="text-sm font-medium text-gray-600">{weekLabel(weekStart)}</span>
-        <button
-          onClick={() => navigate(1)}
-          disabled={isCurrentWeek}
-          className="text-gray-400 hover:text-gray-600 p-1 disabled:opacity-30"
-        >
-          Next →
-        </button>
-      </div>
-
-      {showRegenerate && (
-        <div className="mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between gap-3">
-          <p className="text-xs text-indigo-700">No tasks this week. Regenerate from your schedule?</p>
+    <div className="min-h-screen pb-20">
+      <div className="max-w-lg mx-auto px-4 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-foreground">Weekly Checklist</h1>
           <button
-            onClick={handleRegenerate}
-            disabled={regenerating}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 whitespace-nowrap disabled:opacity-50"
+            onClick={() => setShowScheduleModal(true)}
+            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-full hover:bg-muted"
           >
-            {regenerating ? "…" : "Regenerate"}
+            <Settings className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Schedule</span>
           </button>
         </div>
-      )}
 
-      {loading ? (
-        <div className="text-center py-10 text-gray-400">Loading…</div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <ChecklistColumn
-            title="You"
-            items={mine}
-            readOnly={false}
-            accent="indigo"
-            weekStart={weekStart.toISOString()}
-            onAdd={handleAddItem}
-            onToggle={handleToggle}
-            onDelete={handleDelete}
-            onUpdate={handleUpdate}
-          />
-          <ChecklistColumn
-            title={partnerName ?? "Partner"}
-            items={partner}
-            readOnly
-            accent="amber"
-            weekStart={weekStart.toISOString()}
-          />
+        <div className="flex items-center justify-between mb-4 bg-muted/50 rounded-xl p-1">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-background"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-medium text-foreground">{weekLabel(weekStart)}</span>
+          <button
+            onClick={() => navigate(1)}
+            disabled={isCurrentWeek}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-background disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
-      )}
+
+        {showRegenerate && (
+          <div className="mb-4 p-4 bg-brand-50 border border-brand-200 rounded-xl flex items-center justify-between gap-3">
+            <p className="text-sm text-brand-700">No tasks this week. Generate from your schedule?</p>
+            <Button
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              variant="brand"
+              size="sm"
+            >
+              {regenerating ? "…" : "Generate"}
+            </Button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-2 border-brand-500 border-t-transparent rounded-full" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <ChecklistColumn
+              title="You"
+              items={mine}
+              readOnly={false}
+              accent="brand"
+              weekStart={weekStart.toISOString()}
+              onAdd={handleAddItem}
+              onToggle={handleToggle}
+              onDelete={handleDelete}
+              onUpdate={handleUpdate}
+            />
+            <ChecklistColumn
+              title={partnerName ?? "Partner"}
+              items={partner}
+              readOnly
+              accent="partner"
+              weekStart={weekStart.toISOString()}
+            />
+          </div>
+        )}
+      </div>
 
       {showScheduleModal && (
         <ScheduleModal onClose={() => setShowScheduleModal(false)} />

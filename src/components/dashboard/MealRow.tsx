@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MealLog } from "@/generated/prisma/client";
 import { MEAL_CATEGORIES, MealCategory } from "@/types";
+import { Badge } from "@/components/ui/Badge";
 
 const MEAL_META: Record<string, { label: string; emoji: string }> = {
   breakfast: { label: "Breakfast", emoji: "🌅" },
@@ -10,13 +11,12 @@ const MEAL_META: Record<string, { label: string; emoji: string }> = {
   dinner: { label: "Dinner", emoji: "🌙" },
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  homecooked: "bg-green-100 text-green-700",
-  restaurant: "bg-blue-100 text-blue-700",
-  takeout: "bg-purple-100 text-purple-700",
-  "fast-food": "bg-orange-100 text-orange-700",
-  skipped: "bg-gray-100 text-gray-400",
-  "": "bg-gray-100 text-gray-400",
+const CATEGORY_VARIANTS: Record<string, "success" | "brand" | "partner" | "warning" | "secondary"> = {
+  homecooked: "success",
+  restaurant: "brand",
+  takeout: "partner",
+  "fast-food": "warning",
+  skipped: "secondary",
 };
 
 interface Props {
@@ -38,14 +38,15 @@ export default function MealRow({ mealType, entry, readOnly, today, onAdd, onUpd
   const meta = MEAL_META[mealType] ?? { label: mealType, emoji: "🍴" };
   const catMeta = MEAL_CATEGORIES.find((c) => c.value === (entry?.category || category));
 
-  async function handleSave(cat: MealCategory, currentNotes: string) {
+  async function handleSave() {
+    if (!category) return;
     setSaving(true);
     try {
       if (entry) {
         const res = await fetch(`/api/meal-log/${entry.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ category: cat, notes: currentNotes || null }),
+          body: JSON.stringify({ category, notes: notes || null }),
         });
         if (res.ok) {
           const updated = await res.json();
@@ -56,7 +57,7 @@ export default function MealRow({ mealType, entry, readOnly, today, onAdd, onUpd
         const res = await fetch("/api/meal-log", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mealType, category: cat, notes: currentNotes || null, logDate: today }),
+          body: JSON.stringify({ mealType, category, notes: notes || null, logDate: today }),
         });
         if (res.ok) {
           const created = await res.json();
@@ -79,83 +80,96 @@ export default function MealRow({ mealType, entry, readOnly, today, onAdd, onUpd
     }
   }
 
-  // Read-only view
   if (readOnly) {
     return (
       <div className="flex items-center gap-2 py-1.5">
         <span className="text-sm w-5 text-center">{meta.emoji}</span>
-        <span className="text-xs text-gray-500 w-14 shrink-0">{meta.label}</span>
+        <span className="text-xs text-muted-foreground w-14 shrink-0">{meta.label}</span>
         {entry ? (
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[entry.category]}`}>
+          <Badge variant={CATEGORY_VARIANTS[entry.category] || "secondary"} className="text-xs">
             {catMeta?.emoji} {catMeta?.label ?? entry.category}
-          </span>
+          </Badge>
         ) : (
-          <span className="text-xs text-gray-300 italic">—</span>
+          <span className="text-xs text-muted-foreground/50 italic">—</span>
         )}
       </div>
     );
   }
 
-  // Logged state — show badge + edit/delete
   if (entry && !open) {
     return (
       <div className="flex items-center gap-2 py-1.5 group">
         <span className="text-sm w-5 text-center">{meta.emoji}</span>
-        <span className="text-xs text-gray-500 w-14 shrink-0">{meta.label}</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-1 ${CATEGORY_COLORS[entry.category]}`}>
+        <span className="text-xs text-muted-foreground w-14 shrink-0">{meta.label}</span>
+        <Badge variant={CATEGORY_VARIANTS[entry.category] || "secondary"} className="text-xs flex-1">
           {catMeta?.emoji} {catMeta?.label ?? entry.category}
-        </span>
+        </Badge>
         {entry.notes && (
-          <span className="text-xs text-gray-400 truncate max-w-[60px]" title={entry.notes}>
+          <span className="text-xs text-muted-foreground truncate max-w-[60px]" title={entry.notes}>
             {entry.notes}
           </span>
         )}
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          <button onClick={() => { setCategory(entry.category as MealCategory); setNotes(entry.notes ?? ""); setOpen(true); }} className="text-gray-300 hover:text-indigo-400 text-xs">✏️</button>
-          <button onClick={handleDelete} className="text-gray-300 hover:text-red-400 text-xs">✕</button>
+          <button 
+            onClick={() => { setCategory(entry.category as MealCategory); setNotes(entry.notes ?? ""); setOpen(true); }} 
+            className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+          >
+            ✏️
+          </button>
+          <button 
+            onClick={handleDelete} 
+            className="text-muted-foreground hover:text-destructive text-xs transition-colors"
+          >
+            ✕
+          </button>
         </div>
       </div>
     );
   }
 
-  // Inline form — log or edit
   if (open || !entry) {
     return (
       <div className="py-1.5">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-sm w-5 text-center">{meta.emoji}</span>
-          <span className="text-xs font-medium text-gray-600">{meta.label}</span>
+          <span className="text-xs font-medium text-foreground">{meta.label}</span>
           {open && (
-            <button onClick={() => setOpen(false)} className="ml-auto text-gray-300 hover:text-gray-500 text-xs">✕</button>
+            <button onClick={() => setOpen(false)} className="ml-auto text-muted-foreground hover:text-foreground text-xs transition-colors">
+              ✕
+            </button>
           )}
         </div>
-        <div className="ml-7 space-y-1.5">
-          {/* Notes input */}
-          <input
-            type="text"
-            placeholder="Add a note… (optional)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
-          />
-          {/* Category buttons — tap to save immediately */}
+        <div className="ml-7 space-y-2">
           <div className="flex flex-wrap gap-1">
             {MEAL_CATEGORIES.map((c) => (
               <button
                 key={c.value}
                 type="button"
-                disabled={saving}
-                onClick={() => { setCategory(c.value as MealCategory); handleSave(c.value as MealCategory, notes); }}
-                className={`text-xs px-2 py-1 rounded-full border transition-colors disabled:opacity-50 ${
+                onClick={() => setCategory(c.value)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all duration-200 ${
                   category === c.value
-                    ? "border-indigo-400 bg-indigo-50 text-indigo-700 font-medium"
-                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                    ? "border-brand-400 bg-brand-50 text-brand-700 font-medium shadow-sm"
+                    : "border-border text-muted-foreground hover:border-brand-300 hover:bg-muted"
                 }`}
               >
-                {saving && category === c.value ? "…" : `${c.emoji} ${c.label}`}
+                {c.emoji} {c.label}
               </button>
             ))}
           </div>
+          <input
+            type="text"
+            placeholder="Add a note… (optional)"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full text-xs border border-input bg-background rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all duration-200"
+          />
+          <button
+            onClick={handleSave}
+            disabled={!category || saving}
+            className="text-xs bg-brand-500 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
         </div>
       </div>
     );

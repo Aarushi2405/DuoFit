@@ -4,18 +4,10 @@ import { useState } from "react";
 import { MealLogDTO, MEAL_TYPES, MealType } from "@/types";
 import MealEntry from "@/components/meal-log/MealEntry";
 import AddMealForm from "@/components/meal-log/AddMealForm";
-import EmptyState from "@/components/ui/EmptyState";
-
-interface Props {
-  title: string;
-  meals: MealLogDTO[];
-  readOnly: boolean;
-  accent: "indigo" | "amber";
-  date: string;
-  onAdd?: (meal: MealLogDTO) => void;
-  onDelete?: (id: string) => void;
-  onUpdate?: (meal: MealLogDTO) => void;
-}
+import { Card, CardContent } from "@/components/ui/Card";
+import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { Separator } from "@/components/ui/Separator";
 
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: "🌅 Breakfast",
@@ -24,33 +16,52 @@ const MEAL_LABELS: Record<MealType, string> = {
   snack: "🍎 Snack",
 };
 
+interface Props {
+  title: string;
+  meals: MealLogDTO[];
+  readOnly: boolean;
+  accent: "brand" | "partner";
+  date: string;
+  onAdd?: (meal: MealLogDTO) => void;
+  onDelete?: (id: string) => void;
+  onUpdate?: (meal: MealLogDTO) => void;
+}
+
 export default function MealColumn({ title, meals, readOnly, accent, date, onAdd, onDelete, onUpdate }: Props) {
   const [showForm, setShowForm] = useState(false);
-  const accentClass = accent === "indigo" ? "bg-indigo-500" : "bg-amber-500";
-  const badgeClass = accent === "indigo" ? "bg-indigo-50 text-indigo-700" : "bg-amber-50 text-amber-700";
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className={`h-1 ${accentClass}`} />
-      <div className="p-3">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-800 text-sm">{title}</h2>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
+    <Card className={`overflow-hidden ${accent === "brand" ? "border-brand-200" : "border-partner-200"}`}>
+      <div className={`h-1.5 ${accent === "brand" ? "bg-gradient-to-r from-brand-500 to-brand-400" : "bg-gradient-to-r from-partner-500 to-partner-400"}`} />
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Avatar className={`h-8 w-8 ${accent === "brand" ? "bg-brand-100 text-brand-700" : "bg-partner-100 text-partner-700"}`}>
+              <AvatarFallback className={accent === "brand" ? "bg-brand-100 text-brand-700" : "bg-partner-100 text-partner-700"}>
+                {title[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-semibold text-foreground">{title}</span>
+          </div>
+          <Badge variant={accent}>
             {meals.length} logged
-          </span>
+          </Badge>
         </div>
 
         {meals.length === 0 && readOnly ? (
-          <EmptyState icon="🍽️" title="Nothing yet" />
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-2xl mb-2">🍽️</p>
+            <p className="text-sm">Nothing yet</p>
+          </div>
         ) : (
-          <div className="space-y-3 mb-3">
+          <div className="space-y-3">
             {MEAL_TYPES.map((type) => {
               const group = meals.filter((m) => m.mealType === type);
               if (group.length === 0) return null;
               return (
                 <div key={type}>
-                  <p className="text-xs font-medium text-gray-400 mb-1">{MEAL_LABELS[type]}</p>
-                  <ul className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{MEAL_LABELS[type]}</p>
+                  <div className="space-y-1">
                     {group.map((meal) => (
                       <MealEntry
                         key={meal.id}
@@ -60,7 +71,7 @@ export default function MealColumn({ title, meals, readOnly, accent, date, onAdd
                         onUpdate={onUpdate}
                       />
                     ))}
-                  </ul>
+                  </div>
                 </div>
               );
             })}
@@ -69,6 +80,7 @@ export default function MealColumn({ title, meals, readOnly, accent, date, onAdd
 
         {!readOnly && (
           <>
+            <Separator className="my-3" />
             {showForm ? (
               <AddMealForm
                 date={date}
@@ -81,14 +93,14 @@ export default function MealColumn({ title, meals, readOnly, accent, date, onAdd
             ) : (
               <button
                 onClick={() => setShowForm(true)}
-                className="w-full text-xs text-indigo-600 hover:text-indigo-700 font-medium py-1.5 border border-dashed border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+                className="w-full text-xs font-medium text-brand-600 hover:text-brand-700 py-2 border border-dashed border-brand-200 rounded-lg hover:bg-brand-50 transition-colors"
               >
                 + Log a meal
               </button>
             )}
           </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

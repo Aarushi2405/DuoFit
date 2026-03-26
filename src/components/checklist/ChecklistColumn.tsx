@@ -4,13 +4,17 @@ import { useState } from "react";
 import { ChecklistItemDTO } from "@/types";
 import ChecklistItemRow from "@/components/checklist/ChecklistItemRow";
 import AddItemForm from "@/components/checklist/AddItemForm";
-import EmptyState from "@/components/ui/EmptyState";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { Separator } from "@/components/ui/Separator";
+import { Flame } from "lucide-react";
 
 interface Props {
   title: string;
   items: ChecklistItemDTO[];
   readOnly: boolean;
-  accent: "indigo" | "amber";
+  accent: "brand" | "partner";
   weekStart: string;
   onAdd?: (item: ChecklistItemDTO) => void;
   onToggle?: (id: string, done: boolean) => void;
@@ -20,24 +24,32 @@ interface Props {
 
 export default function ChecklistColumn({ title, items, readOnly, accent, weekStart, onAdd, onToggle, onDelete, onUpdate }: Props) {
   const done = items.filter((i) => i.done).length;
-  const accentClass = accent === "indigo" ? "bg-indigo-500" : "bg-amber-500";
-  const badgeClass = accent === "indigo" ? "bg-indigo-50 text-indigo-700" : "bg-amber-50 text-amber-700";
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className={`h-1 ${accentClass}`} />
-      <div className="p-3">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-800 text-sm">{title}</h2>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
+    <Card className={`overflow-hidden ${accent === "brand" ? "border-brand-200" : "border-partner-200"}`}>
+      <div className={`h-1.5 ${accent === "brand" ? "bg-gradient-to-r from-brand-500 to-brand-400" : "bg-gradient-to-r from-partner-500 to-partner-400"}`} />
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Avatar className={`h-8 w-8 ${accent === "brand" ? "bg-brand-100 text-brand-700" : "bg-partner-100 text-partner-700"}`}>
+              <AvatarFallback className={accent === "brand" ? "bg-brand-100 text-brand-700" : "bg-partner-100 text-partner-700"}>
+                {title[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-semibold text-foreground">{title}</span>
+          </div>
+          <Badge variant={accent}>
             {done}/{items.length}
-          </span>
+          </Badge>
         </div>
 
         {readOnly && items.length === 0 ? (
-          <EmptyState icon="👀" title="Nothing yet" />
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-2xl mb-2">📋</p>
+            <p className="text-sm">Nothing yet</p>
+          </div>
         ) : (
-          <ul className="space-y-1.5 mb-3">
+          <div className="space-y-1">
             {items.map((item) => (
               <ChecklistItemRow
                 key={item.id}
@@ -49,13 +61,16 @@ export default function ChecklistColumn({ title, items, readOnly, accent, weekSt
                 onUpdate={onUpdate}
               />
             ))}
-          </ul>
+          </div>
         )}
 
         {!readOnly && (
-          <AddItemForm weekStart={weekStart} onAdd={onAdd!} />
+          <>
+            <Separator className="my-3" />
+            <AddItemForm weekStart={weekStart} onAdd={onAdd!} />
+          </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

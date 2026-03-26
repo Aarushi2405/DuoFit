@@ -1,35 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
-import EmptyState from "@/components/ui/EmptyState";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { Progress } from "@/components/ui/Progress";
+import { Separator } from "@/components/ui/Separator";
 import { useUser } from "@/components/providers/UserContext";
 import { ChecklistItem, MealLog } from "@/generated/prisma/client";
 import PairPartnerModal from "@/components/dashboard/PairPartnerModal";
 import ScheduleModal from "@/components/schedule/ScheduleModal";
 import MealRow from "@/components/dashboard/MealRow";
+import { Flame, Calendar, Settings, LogOut, Plus } from "lucide-react";
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner"] as const;
-const DAY_ABBREVS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function localDateStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function isItemForLocalToday(item: ChecklistItem): boolean {
-  const now = new Date();
-  const todayAbbrev = DAY_ABBREVS[now.getDay()]; // local day-of-week
-  const todayStr = localDateStr(now);
-  const dayPrefixes = DAY_ABBREVS.map((d) => d + " \u2013");
-  const hasDayPrefix = dayPrefixes.some((p) => item.label.startsWith(p));
-  if (hasDayPrefix) return item.label.startsWith(todayAbbrev + " \u2013");
-  if (item.logDate) {
-    // logDate is serialized to string by Next.js when crossing server→client
-    return localDateStr(new Date(item.logDate as unknown as string)) === todayStr;
-  }
-  return true; // old items without logDate: always show
-}
 
 interface TaskItem {
   id: string;
@@ -75,24 +60,30 @@ function TaskRow({ item, readOnly, onToggle }: {
   }
 
   return (
-    <li className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-      <button
-        onClick={readOnly ? undefined : handleToggle}
-        disabled={readOnly}
-        className={`w-5 h-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
-          readOnly ? "cursor-default opacity-60" : "cursor-pointer"
-        } ${localDone ? "bg-indigo-500 border-indigo-500" : "border-gray-300 hover:border-indigo-400"}`}
+    <button
+      onClick={readOnly ? undefined : handleToggle}
+      disabled={readOnly}
+      className={`w-full flex items-center gap-3 py-3 px-3 rounded-lg transition-all duration-200 ${
+        readOnly ? "cursor-default opacity-60" : "cursor-pointer hover:bg-muted/50 active:scale-[0.98]"
+      }`}
+    >
+      <div
+        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 shrink-0 ${
+          localDone
+            ? "bg-brand-500 border-brand-500 scale-100"
+            : "border-muted-foreground/30 hover:border-brand-400"
+        }`}
       >
         {localDone && (
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-white">
+            <path d="M2.5 6l2.5 2.5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
-      </button>
-      <span className={`text-sm flex-1 ${localDone ? "line-through text-gray-400" : "text-gray-700"}`}>
+      </div>
+      <span className={`text-sm text-left flex-1 ${localDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
         {item.label}
       </span>
-    </li>
+    </button>
   );
 }
 
@@ -114,7 +105,7 @@ function UserColumn({
   meals: MealLog[];
   streak: number;
   readOnly: boolean;
-  accent: "indigo" | "amber";
+  accent: "brand" | "partner";
   today: string;
   onToggle?: (id: string, done: boolean) => void;
   onMealAdd?: (meal: MealLog) => void;
@@ -122,50 +113,52 @@ function UserColumn({
   onMealDelete?: (id: string) => void;
 }) {
   const done = items.filter((i) => i.done).length;
-  const accentBar = accent === "indigo" ? "bg-indigo-500" : "bg-amber-500";
-  const accentBorder = accent === "indigo" ? "border-indigo-200" : "border-amber-200";
-  const accentAvatar = accent === "indigo" ? "bg-indigo-500" : "bg-amber-500";
+  const progress = items.length > 0 ? (done / items.length) * 100 : 0;
 
   return (
-    <Card className={`flex-1 flex flex-col ${accentBorder}`} padding={false}>
-      <div className={`h-1 rounded-t-2xl ${accentBar}`} />
-      <div className="p-4 flex flex-col gap-4">
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${accentAvatar}`}>
-            {name[0]?.toUpperCase()}
-          </div>
+    <Card className={`flex-1 overflow-hidden ${accent === "brand" ? "border-brand-200" : "border-partner-200"}`}>
+      <div className={`h-1.5 ${accent === "brand" ? "bg-gradient-to-r from-brand-500 to-brand-400" : "bg-gradient-to-r from-partner-500 to-partner-400"}`} />
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <Avatar className={`h-10 w-10 ${accent === "brand" ? "bg-brand-100 text-brand-700" : "bg-partner-100 text-partner-700"}`}>
+            <AvatarFallback className={accent === "brand" ? "bg-brand-100 text-brand-700" : "bg-partner-100 text-partner-700"}>
+              {name[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-800 text-sm truncate">{name}</p>
-            <p className="text-xs text-gray-400 flex items-center gap-1">
-              <span>🔥 {streak}d</span>
-            </p>
+            <p className="font-semibold text-foreground text-sm truncate">{name}</p>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Flame className="h-3.5 w-3.5 text-orange-500" />
+              <span>{streak} day streak</span>
+            </div>
           </div>
         </div>
 
-        {/* Tasks */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-            Tasks · {done}/{items.length}
-          </p>
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tasks</span>
+            <Badge variant={accent} className="text-xs">
+              {done}/{items.length}
+            </Badge>
+          </div>
+          <Progress value={progress} variant={accent} size="sm" />
+        </div>
+
+        <div className="space-y-1 mb-4">
           {items.length === 0 ? (
-            <p className="text-xs text-gray-300 italic py-1">No tasks today</p>
+            <p className="text-xs text-muted-foreground italic py-2 text-center">No tasks today</p>
           ) : (
-            <ul>
-              {items.map((item) => (
-                <TaskRow key={item.id} item={item} readOnly={readOnly} onToggle={onToggle} />
-              ))}
-            </ul>
+            items.map((item) => (
+              <TaskRow key={item.id} item={item} readOnly={readOnly} onToggle={onToggle} />
+            ))
           )}
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-gray-100" />
+        <Separator className="my-3" />
 
-        {/* Meals */}
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Meals</p>
-          <div className="divide-y divide-gray-50">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Meals</p>
+          <div className="space-y-2">
             {MEAL_TYPES.map((type) => {
               const entry = meals.find((m) => m.mealType === type) ?? null;
               return (
@@ -183,7 +176,7 @@ function UserColumn({
             })}
           </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 }
@@ -191,7 +184,7 @@ function UserColumn({
 export default function DashboardPage({ me, partner, hasSchedule, today }: Props) {
   const { me: userInfo } = useUser();
   const [myItems, setMyItems] = useState<TaskItem[]>(
-    me.checklist.filter(isItemForLocalToday).map((i) => ({ id: i.id, label: i.label, done: i.done }))
+    me.checklist.map((i) => ({ id: i.id, label: i.label, done: i.done }))
   );
   const [myMeals, setMyMeals] = useState<MealLog[]>(me.meals);
   const [showPairModal, setShowPairModal] = useState(false);
@@ -215,97 +208,109 @@ export default function DashboardPage({ me, partner, hasSchedule, today }: Props
     setMyMeals((prev) => prev.filter((m) => m.id !== id));
   }
 
-  const partnerItems: TaskItem[] = useMemo(
-    () => (partner?.checklist ?? []).filter(isItemForLocalToday).map((i) => ({ id: i.id, label: i.label, done: i.done })),
-    [partner]
-  );
+  const partnerItems: TaskItem[] = (partner?.checklist ?? []).map((i) => ({
+    id: i.id, label: i.label, done: i.done,
+  }));
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-8 pb-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Today</h1>
-          <p className="text-sm text-gray-500">{todayLabel}</p>
+    <div className="min-h-screen pb-20">
+      <div className="max-w-lg mx-auto px-4 pt-6">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <p className="text-sm text-muted-foreground">{todayLabel}</p>
+            <h1 className="text-2xl font-bold text-foreground">Today</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-full hover:bg-muted"
+            >
+              {hasSchedule ? <Settings className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{hasSchedule ? "Schedule" : "Add schedule"}</span>
+            </button>
+            <LogoutButton />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="text-xs text-indigo-500 hover:text-indigo-700 font-medium px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
-          >
-            {hasSchedule ? "✏️ Schedule" : "＋ Schedule"}
-          </button>
-          <LogoutButton />
-        </div>
-      </div>
 
-      {/* Couple streak pill */}
-      {partner && (
-        <div className="flex items-center gap-1.5 mb-4 text-xs text-gray-500">
-          <span>💑</span>
-          <span>Couple streak:</span>
-          <span className="font-semibold text-gray-700">{Math.min(me.streak, partner.streak)} days</span>
-        </div>
-      )}
+        {partner && (
+          <div className="flex items-center gap-2 mb-4">
+            <Badge variant="secondary" className="gap-1">
+              <span>💑</span>
+              <span>Couple streak: {Math.min(me.streak, partner.streak)} days</span>
+            </Badge>
+          </div>
+        )}
 
-      {/* Columns */}
-      <div className="flex gap-3 mb-4">
-        <UserColumn
-          name={me.name}
-          items={myItems}
-          meals={myMeals}
-          streak={me.streak}
-          readOnly={false}
-          accent="indigo"
-          today={today}
-          onToggle={handleToggle}
-          onMealAdd={handleMealAdd}
-          onMealUpdate={handleMealUpdate}
-          onMealDelete={handleMealDelete}
-        />
-        {partner ? (
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <UserColumn
-            name={partner.name}
-            items={partnerItems}
-            meals={partner.meals}
-            streak={partner.streak}
-            readOnly
-            accent="amber"
+            name={me.name}
+            items={myItems}
+            meals={myMeals}
+            streak={me.streak}
+            readOnly={false}
+            accent="brand"
             today={today}
+            onToggle={handleToggle}
+            onMealAdd={handleMealAdd}
+            onMealUpdate={handleMealUpdate}
+            onMealDelete={handleMealDelete}
           />
-        ) : (
-          <Card className="flex-1 border-dashed border-gray-200 flex flex-col items-center justify-center text-center py-8 gap-3">
-            <p className="text-3xl">👫</p>
-            <p className="text-xs font-medium text-gray-600">No partner yet</p>
-            <div className="flex flex-col gap-1.5 items-center w-full px-2">
-              <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-2 py-1.5 text-xs w-full justify-center">
-                <span className="text-gray-400">Code:</span>
-                <span className="font-mono font-bold text-indigo-600">{userInfo.inviteCode}</span>
-                <button onClick={() => navigator.clipboard.writeText(userInfo.inviteCode)} className="text-gray-400 hover:text-gray-600">📋</button>
+          {partner ? (
+            <UserColumn
+              name={partner.name}
+              items={partnerItems}
+              meals={partner.meals}
+              streak={partner.streak}
+              readOnly
+              accent="partner"
+              today={today}
+            />
+          ) : (
+            <Card className="flex-1 border-dashed flex flex-col items-center justify-center text-center py-8 gap-3">
+              <CardContent className="p-4 flex flex-col items-center gap-3">
+                <p className="text-4xl">👫</p>
+                <p className="text-sm font-medium text-foreground">No partner yet</p>
+                <div className="flex flex-col gap-2 items-center w-full">
+                  <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-xs w-full justify-center">
+                    <span className="text-muted-foreground">Your code:</span>
+                    <code className="font-mono font-bold text-brand-600">{userInfo.inviteCode}</code>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(userInfo.inviteCode)} 
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      📋
+                    </button>
+                  </div>
+                  <Button onClick={() => setShowPairModal(true)} variant="outline" size="sm" className="w-full">
+                    Enter partner code
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {!hasSchedule && (
+          <Card className="bg-gradient-to-r from-brand-50 to-partner-50 border-brand-200">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-background rounded-lg shadow-sm">
+                  <Calendar className="h-5 w-5 text-brand-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">Set up your fitness schedule</p>
+                  <p className="text-sm text-muted-foreground mt-0.5 mb-3">
+                    Set your workout days, run days, and steps goal — we&apos;ll auto-fill your checklist.
+                  </p>
+                  <Button size="sm" variant="brand" onClick={() => setShowScheduleModal(true)}>
+                    Set up schedule
+                  </Button>
+                </div>
               </div>
-              <Button onClick={() => setShowPairModal(true)} variant="secondary" size="sm" className="w-full text-xs">
-                Enter code
-              </Button>
-            </div>
+            </CardContent>
           </Card>
         )}
       </div>
-
-      {/* Schedule setup */}
-      {!hasSchedule && (
-        <Card>
-          <div className="flex items-start gap-3">
-            <span className="text-xl">🗓️</span>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800 text-sm">Set up your fitness schedule</p>
-              <p className="text-xs text-gray-500 mt-0.5 mb-3">
-                Set your workout days, run days, and steps goal — we&apos;ll auto-fill your checklist.
-              </p>
-              <Button size="sm" onClick={() => setShowScheduleModal(true)}>Set up schedule</Button>
-            </div>
-          </div>
-        </Card>
-      )}
 
       {showPairModal && <PairPartnerModal onClose={() => setShowPairModal(false)} />}
       {showScheduleModal && <ScheduleModal onClose={() => setShowScheduleModal(false)} />}
@@ -316,19 +321,19 @@ export default function DashboardPage({ me, partner, hasSchedule, today }: Props
 function LogoutButton() {
   const { me } = useUser();
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
-        {me.name[0]?.toUpperCase()}
-      </div>
-      <button
-        onClick={async () => {
-          await fetch("/api/auth/logout", { method: "POST" });
-          window.location.href = "/login";
-        }}
-        className="text-xs text-gray-400 hover:text-gray-600"
-      >
-        Sign out
-      </button>
-    </div>
+    <button
+      onClick={async () => {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/login";
+      }}
+      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+    >
+      <Avatar className="h-8 w-8 bg-brand-100 text-brand-700">
+        <AvatarFallback className="bg-brand-100 text-brand-700">
+          {me.name[0]?.toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <LogOut className="h-4 w-4" />
+    </button>
   );
 }
