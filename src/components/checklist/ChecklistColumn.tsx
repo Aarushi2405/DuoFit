@@ -15,9 +15,10 @@ interface Props {
   onAdd?: (item: ChecklistItemDTO) => void;
   onToggle?: (id: string, done: boolean) => void;
   onDelete?: (id: string) => void;
+  onUpdate?: (item: ChecklistItemDTO) => void;
 }
 
-export default function ChecklistColumn({ title, items, readOnly, accent, weekStart, onAdd, onToggle, onDelete }: Props) {
+export default function ChecklistColumn({ title, items, readOnly, accent, weekStart, onAdd, onToggle, onDelete, onUpdate }: Props) {
   const done = items.filter((i) => i.done).length;
   const accentClass = accent === "indigo" ? "bg-indigo-500" : "bg-amber-500";
   const badgeClass = accent === "indigo" ? "bg-indigo-50 text-indigo-700" : "bg-amber-50 text-amber-700";
@@ -45,6 +46,7 @@ export default function ChecklistColumn({ title, items, readOnly, accent, weekSt
                 accent={accent}
                 onToggle={onToggle}
                 onDelete={onDelete}
+                onUpdate={onUpdate}
               />
             ))}
           </ul>

@@ -18,13 +18,13 @@ export default function MealEntry({ meal, readOnly, onDelete, onUpdate }: Props)
 
   const catMeta = MEAL_CATEGORIES.find((c) => c.value === meal.category);
 
-  async function handleSave() {
+  async function handleSave(cat: string, currentNotes: string) {
     setSaving(true);
     try {
       const res = await fetch(`/api/meal-log/${meal.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, notes: notes || null }),
+        body: JSON.stringify({ category: cat, notes: currentNotes || null }),
       });
       if (res.ok) {
         const updated = await res.json();
@@ -44,15 +44,6 @@ export default function MealEntry({ meal, readOnly, onDelete, onUpdate }: Props)
   if (editing) {
     return (
       <li className="bg-gray-50 rounded-lg p-2 space-y-2">
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full text-xs border border-gray-200 rounded px-2 py-1 outline-none"
-        >
-          {MEAL_CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
-          ))}
-        </select>
         <input
           type="text"
           value={notes}
@@ -60,10 +51,24 @@ export default function MealEntry({ meal, readOnly, onDelete, onUpdate }: Props)
           className="w-full text-xs border border-gray-200 rounded px-2 py-1 outline-none"
           placeholder="Notes (optional)"
         />
-        <div className="flex gap-1">
-          <button onClick={handleSave} disabled={saving} className="flex-1 text-xs bg-indigo-500 text-white rounded py-1 hover:bg-indigo-600 disabled:opacity-50">Save</button>
-          <button onClick={() => setEditing(false)} className="flex-1 text-xs border border-gray-200 rounded py-1 hover:bg-gray-100">Cancel</button>
+        <div className="flex flex-wrap gap-1">
+          {MEAL_CATEGORIES.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              disabled={saving}
+              onClick={() => { setCategory(c.value); handleSave(c.value, notes); }}
+              className={`text-xs px-2 py-1 rounded-full border transition-colors disabled:opacity-50 ${
+                category === c.value
+                  ? "border-indigo-400 bg-indigo-50 text-indigo-700 font-medium"
+                  : "border-gray-200 text-gray-500 hover:border-gray-300"
+              }`}
+            >
+              {saving && category === c.value ? "…" : `${c.emoji} ${c.label}`}
+            </button>
+          ))}
         </div>
+        <button onClick={() => setEditing(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
       </li>
     );
   }

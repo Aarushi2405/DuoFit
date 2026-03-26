@@ -14,7 +14,7 @@ async function getStreak(userId: string): Promise<number> {
     const start = getDayStart(d);
     const end = getDayEnd(d);
     const count = await prisma.checklistItem.count({
-      where: { userId, done: true, weekStart: { gte: getWeekStart(start), lte: end } },
+      where: { userId, done: true, completedAt: { gte: start, lte: end } },
     });
     if (count > 0) streak++;
     else break;

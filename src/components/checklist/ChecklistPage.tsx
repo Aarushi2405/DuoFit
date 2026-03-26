@@ -95,6 +95,10 @@ export default function ChecklistPage({ initialMine, initialPartner, partnerName
     setMine((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
+  const handleUpdate = useCallback((updated: ChecklistItemDTO) => {
+    setMine((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+  }, []);
+
   const isCurrentWeek = toISO(weekStart) === toISO(getWeekStart());
   const showRegenerate = hasSchedule && mine.length === 0 && !loading;
 
@@ -151,6 +155,7 @@ export default function ChecklistPage({ initialMine, initialPartner, partnerName
             onAdd={handleAddItem}
             onToggle={handleToggle}
             onDelete={handleDelete}
+            onUpdate={handleUpdate}
           />
           <ChecklistColumn
             title={partnerName ?? "Partner"}

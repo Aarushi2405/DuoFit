@@ -15,7 +15,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const updated = await prisma.checklistItem.update({
     where: { id },
     data: {
-      ...(done !== undefined && { done }),
+      ...(done !== undefined && {
+        done,
+        completedAt: done ? new Date() : null,
+      }),
       ...(label !== undefined && { label: label.trim() }),
     },
   });
