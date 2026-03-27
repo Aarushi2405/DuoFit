@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
@@ -15,6 +15,22 @@ import MealRow from "@/components/dashboard/MealRow";
 import { Flame, Calendar, Settings, LogOut, Plus } from "lucide-react";
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner"] as const;
+const DAY_ABBREVS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function localDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function isItemForLocalToday(item: ChecklistItem): boolean {
+  const now = new Date();
+  const todayAbbrev = DAY_ABBREVS[now.getDay()];
+  const todayStr = localDateStr(now);
+  const dayPrefixes = DAY_ABBREVS.map((d) => d + " \u2013");
+  const hasDayPrefix = dayPrefixes.some((p) => item.label.startsWith(p));
+  if (hasDayPrefix) return item.label.startsWith(todayAbbrev + " \u2013");
+  if (item.logDate) return localDateStr(new Date(item.logDate as unknown as string)) === todayStr;
+  return true;
+}
 
 interface TaskItem {
   id: string;
@@ -184,7 +200,7 @@ function UserColumn({
 export default function DashboardPage({ me, partner, hasSchedule, today }: Props) {
   const { me: userInfo } = useUser();
   const [myItems, setMyItems] = useState<TaskItem[]>(
-    me.checklist.map((i) => ({ id: i.id, label: i.label, done: i.done }))
+    me.checklist.filter(isItemForLocalToday).map((i) => ({ id: i.id, label: i.label, done: i.done }))
   );
   const [myMeals, setMyMeals] = useState<MealLog[]>(me.meals);
   const [showPairModal, setShowPairModal] = useState(false);
@@ -208,9 +224,10 @@ export default function DashboardPage({ me, partner, hasSchedule, today }: Props
     setMyMeals((prev) => prev.filter((m) => m.id !== id));
   }
 
-  const partnerItems: TaskItem[] = (partner?.checklist ?? []).map((i) => ({
-    id: i.id, label: i.label, done: i.done,
-  }));
+  const partnerItems: TaskItem[] = useMemo(
+    () => (partner?.checklist ?? []).filter(isItemForLocalToday).map((i) => ({ id: i.id, label: i.label, done: i.done })),
+    [partner]
+  );
 
   return (
     <div className="min-h-screen pb-20">
