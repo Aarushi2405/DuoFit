@@ -13,6 +13,6 @@ export async function POST(req: NextRequest) {
   const ext = file.name.split(".").pop() ?? "jpg";
   const filename = `${session.sub}/${Date.now()}.${ext}`;
 
-  const blob = await put(filename, file, { access: "public" });
+  const blob = await put(filename, file, { access: "private" });
   return NextResponse.json({ url: blob.url });
 }

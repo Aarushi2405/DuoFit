@@ -3,6 +3,10 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 
+function proxyUrl(url: string): string {
+  return `/api/image?url=${encodeURIComponent(url)}`;
+}
+
 interface Props {
   imageUrl: string | null;
   onUpload: (url: string) => void;
@@ -32,22 +36,25 @@ export default function ImageUpload({ imageUrl, onUpload, onRemove, readOnly }: 
 
   if (readOnly) {
     if (!imageUrl) return null;
+    const src = proxyUrl(imageUrl);
     return (
       <>
         <button onClick={() => setLightbox(true)} className="block mt-1.5">
-          <Image src={imageUrl} alt="attachment" width={120} height={80} className="rounded-lg object-cover w-full max-w-[120px] h-20" />
+          <Image src={src} alt="attachment" width={120} height={80} className="rounded-lg object-cover w-full max-w-[120px] h-20" />
         </button>
-        {lightbox && <Lightbox url={imageUrl} onClose={() => setLightbox(false)} />}
+        {lightbox && <Lightbox url={src} onClose={() => setLightbox(false)} />}
       </>
     );
   }
 
+  const src = imageUrl ? proxyUrl(imageUrl) : null;
+
   return (
     <div className="mt-1.5">
-      {imageUrl ? (
+      {src ? (
         <div className="relative inline-block">
           <button onClick={() => setLightbox(true)}>
-            <Image src={imageUrl} alt="attachment" width={120} height={80} className="rounded-lg object-cover w-full max-w-[120px] h-20" />
+            <Image src={src} alt="attachment" width={120} height={80} className="rounded-lg object-cover w-full max-w-[120px] h-20" />
           </button>
           <button
             onClick={onRemove}
@@ -56,7 +63,7 @@ export default function ImageUpload({ imageUrl, onUpload, onRemove, readOnly }: 
           >
             ✕
           </button>
-          {lightbox && <Lightbox url={imageUrl} onClose={() => setLightbox(false)} />}
+          {lightbox && <Lightbox url={src} onClose={() => setLightbox(false)} />}
         </div>
       ) : (
         <button
