@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
 import { Separator } from "@/components/ui/Separator";
 import { useUser } from "@/components/providers/UserContext";
-import { ChecklistItem, MealLog } from "@/generated/prisma/client";
+import { ChecklistItem, MealLog } from "@/generated/prisma";
 import PairPartnerModal from "@/components/dashboard/PairPartnerModal";
 import ScheduleModal from "@/components/schedule/ScheduleModal";
 import MealRow from "@/components/dashboard/MealRow";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MealLog } from "@/generated/prisma/client";
+import { MealLog } from "@/generated/prisma";
 import { MEAL_CATEGORIES, MealCategory } from "@/types";
 import { Badge } from "@/components/ui/Badge";
 

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { MealLogDTO } from "@/types";
-import { MealLog } from "@/generated/prisma/client";
+import { MealLog } from "@/generated/prisma";
 import MealColumn from "@/components/meal-log/MealColumn";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

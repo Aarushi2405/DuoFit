@@ -5,7 +5,7 @@ import { ChecklistItemDTO } from "@/types";
 import { getWeekStart } from "@/lib/dates";
 import ChecklistColumn from "@/components/checklist/ChecklistColumn";
 import ScheduleModal from "@/components/schedule/ScheduleModal";
-import { ChecklistItem } from "@/generated/prisma/client";
+import { ChecklistItem } from "@/generated/prisma";
 import { Button } from "@/components/ui/Button";
 import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
 
