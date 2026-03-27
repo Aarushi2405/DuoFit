@@ -6,7 +6,7 @@ import { ChecklistItemDTO } from "@/types";
 interface Props {
   item: ChecklistItemDTO;
   readOnly: boolean;
-  accent: "indigo" | "amber";
+  accent: "brand" | "partner";
   onToggle?: (id: string, done: boolean) => void;
   onDelete?: (id: string) => void;
   onUpdate?: (item: ChecklistItemDTO) => void;
@@ -18,10 +18,6 @@ export default function ChecklistItemRow({ item, readOnly, accent, onToggle, onD
   const [editing, setEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(item.label);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const checkClass = accent === "indigo"
-    ? "text-indigo-600 border-indigo-400"
-    : "text-amber-600 border-amber-400";
 
   async function handleToggle() {
     const next = !localDone;
@@ -82,19 +78,23 @@ export default function ChecklistItemRow({ item, readOnly, accent, onToggle, onD
     }
   }
 
+  const doneClass = accent === "brand"
+    ? "bg-brand-500 border-brand-500"
+    : "bg-partner-500 border-partner-500";
+
   return (
-    <li className="flex items-center gap-2 group">
+    <div className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-lg group hover:bg-muted/50 transition-colors">
       <button
         onClick={readOnly ? undefined : handleToggle}
         disabled={readOnly}
-        className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
-          readOnly ? "opacity-60 cursor-default" : "cursor-pointer"
-        } ${localDone ? checkClass + " bg-current" : "border-gray-300"}`}
+        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+          readOnly ? "opacity-60 cursor-default" : "cursor-pointer active:scale-95"
+        } ${localDone ? doneClass : "border-muted-foreground/30 hover:border-brand-400"}`}
         aria-label={localDone ? "Mark incomplete" : "Mark complete"}
       >
         {localDone && (
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-white">
+            <path d="M2 5l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </button>
@@ -106,11 +106,11 @@ export default function ChecklistItemRow({ item, readOnly, accent, onToggle, onD
           onChange={(e) => setEditLabel(e.target.value)}
           onBlur={commitEdit}
           onKeyDown={handleKeyDown}
-          className="flex-1 text-sm border-b border-indigo-400 outline-none bg-transparent py-0.5"
+          className="flex-1 text-sm border-b border-brand-400 outline-none bg-transparent py-0.5"
           autoFocus
         />
       ) : (
-        <span className={`flex-1 text-sm ${localDone ? "line-through text-gray-400" : "text-gray-700"}`}>
+        <span className={`flex-1 text-sm ${localDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
           {item.label}
         </span>
       )}
@@ -119,7 +119,7 @@ export default function ChecklistItemRow({ item, readOnly, accent, onToggle, onD
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
           <button
             onClick={startEdit}
-            className="text-gray-300 hover:text-indigo-400 text-xs"
+            className="text-muted-foreground hover:text-foreground text-xs transition-colors"
             aria-label="Edit label"
           >
             ✏️
@@ -127,13 +127,13 @@ export default function ChecklistItemRow({ item, readOnly, accent, onToggle, onD
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="text-gray-300 hover:text-red-400 text-xs disabled:opacity-50"
+            className="text-muted-foreground hover:text-destructive text-xs transition-colors disabled:opacity-50"
             aria-label="Delete item"
           >
             ✕
           </button>
         </div>
       )}
-    </li>
+    </div>
   );
 }

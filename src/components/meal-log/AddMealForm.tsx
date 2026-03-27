@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { MealLogDTO, MEAL_TYPES, MEAL_CATEGORIES } from "@/types";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   date: string;
@@ -49,11 +50,11 @@ export default function AddMealForm({ date, onAdd, onCancel }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 bg-gray-50 rounded-lg p-2">
+    <form onSubmit={handleSubmit} className="space-y-2.5 bg-muted/50 rounded-lg p-2.5">
       <select
         value={mealType}
         onChange={(e) => setMealType(e.target.value)}
-        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400"
+        className="w-full text-xs border border-input bg-background rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
       >
         {MEAL_TYPES.map((t) => (
           <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
@@ -62,10 +63,10 @@ export default function AddMealForm({ date, onAdd, onCancel }: Props) {
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400"
+        className="w-full text-xs border border-input bg-background rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
         required
       >
-        <option value="">Select type…</option>
+        <option value="">Select type...</option>
         {MEAL_CATEGORIES.map((c) => (
           <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
         ))}
@@ -75,20 +76,28 @@ export default function AddMealForm({ date, onAdd, onCancel }: Props) {
         placeholder="Notes (optional)"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400"
+        className="w-full text-xs border border-input bg-background rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
       />
-      {error && <p className="text-xs text-red-500">{error}</p>}
-      <div className="flex gap-1.5">
-        <button
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      <div className="flex gap-2">
+        <Button
           type="submit"
+          variant="brand"
+          size="sm"
           disabled={loading || !category}
-          className="flex-1 text-xs bg-indigo-500 text-white rounded-lg py-1.5 font-medium hover:bg-indigo-600 disabled:opacity-50 transition-colors"
+          className="flex-1"
         >
-          {loading ? "Saving…" : "Log meal"}
-        </button>
-        <button type="button" onClick={onCancel} className="flex-1 text-xs border border-gray-200 rounded-lg py-1.5 hover:bg-gray-100 transition-colors">
+          {loading ? "Saving..." : "Log meal"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+          className="flex-1"
+        >
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );
